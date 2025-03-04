@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Dapper;
 
+
 class Program
 {
     const string connectionString = "Server=localhost;Database=MailingListDB;Integrated Security=true;TrustServerCertificate=true";
@@ -33,7 +34,10 @@ class Program
             Console.WriteLine("4. Показать все страны");
             Console.WriteLine("5. Показать покупателей из конкретного города");
             Console.WriteLine("6. Показать покупателей из конкретной страны");
-            Console.WriteLine("7. Выйти");
+            Console.WriteLine("7. Показать список разделов");
+            Console.WriteLine("8. Показать список акционных товаров");
+            Console.WriteLine("9. Показать акции для конкретной страны");
+            Console.WriteLine("10. Выйти");
             string choice = Console.ReadLine();
 
             switch (choice)
@@ -44,7 +48,10 @@ class Program
                 case "4": ShowCountries(); break;
                 case "5": ShowCustomersByCity(); break;
                 case "6": ShowCustomersByCountry(); break;
-                case "7": return;
+                case "7": ShowSections(); break;
+                case "8": ShowPromotions(); break;
+                case "9": ShowPromotionsByCountry(); break;
+                case "10": return;
                 default: Console.WriteLine("Неверный ввод, попробуйте снова."); break;
             }
         }
@@ -101,4 +108,31 @@ class Program
         foreach (var customer in customers)
             Console.WriteLine($"{customer.FullName} - {customer.Email}");
     }
+
+    static void ShowSections()
+    {
+        using var connection = new SqlConnection(connectionString);
+        var sections = connection.Query<string>("SELECT Name FROM Sections");
+        foreach (var section in sections)
+            Console.WriteLine(section);
+    }
+
+    static void ShowPromotions()
+    {
+        using var connection = new SqlConnection(connectionString);
+        var promotions = connection.Query("SELECT ProductName, DiscountPercent, Country, StartDate, EndDate FROM Promotions");
+        foreach (var promo in promotions)
+            Console.WriteLine($"{promo.ProductName} - {promo.DiscountPercent}% скидка ({promo.Country}) с {promo.StartDate} по {promo.EndDate}");
+    }
+
+    static void ShowPromotionsByCountry()
+    {
+        Console.Write("Введите страну: ");
+        string country = Console.ReadLine();
+        using var connection = new SqlConnection(connectionString);
+        var promotions = connection.Query("SELECT ProductName, DiscountPercent, StartDate, EndDate FROM Promotions WHERE Country = @Country", new { Country = country });
+        foreach (var promo in promotions)
+            Console.WriteLine($"{promo.ProductName} - {promo.DiscountPercent}% скидка с {promo.StartDate} по {promo.EndDate}");
+    }
 }
+
